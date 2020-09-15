@@ -16,12 +16,13 @@
 #define VERSION      "0.0.8"             /* software version */
 #define USAGE        "kirc [-s hostname] [-p port] [-c channel] [-n nick] \
 [-r real name] [-u username] [-k password] [-x init command] [-w columns] \
-[-W columns] [-o path] [-h|v|V]"
+[-W columns] [-o path] [-h|v|V|6]"
 
 static int    conn;                      /* connection socket */
 static size_t verb = 0;                  /* verbose output (e.g. raw stream) */
 static size_t cmax = 80;                 /* max number of chars per line */
 static size_t gutl = 10;                 /* max char width of left column */
+static size_t ipv6 = 0;                  /* force ipv6 */
 static char * host = "irc.freenode.org"; /* irc host address */
 static char * chan = "kirc";             /* channel */
 static char * port = "6667";             /* server port */
@@ -55,7 +56,7 @@ raw(char *fmt, ...) {
     if (olog) log_append(cmd_str, olog);
     if (write(conn, cmd_str, strlen(cmd_str)) < 0) {
         perror("Write to socket");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     free(cmd_str);
@@ -65,13 +66,16 @@ static void
 irc_init() {
 
     struct addrinfo *res, hints = {
-        .ai_family = AF_INET,
+        .ai_family = (ipv6 ? AF_INET6 : AF_UNSPEC),
         .ai_socktype = SOCK_STREAM
     };
 
     getaddrinfo(host, port, &hints, &res);
     conn = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-    connect(conn, res->ai_addr, res->ai_addrlen);
+    if (connect(conn, res->ai_addr, res->ai_addrlen) != 0) {
+        perror("Socket");
+        exit(EXIT_FAILURE);
+    }
     freeaddrinfo(res);
     fcntl(conn, F_SETFL, O_NONBLOCK);
 }
@@ -217,9 +221,10 @@ main(int argc, char **argv) {
 
     int cval;
 
-    while ((cval = getopt(argc, argv, "s:p:o:n:k:c:u:r:x:w:W:hvV")) != -1) {
+    while ((cval = getopt(argc, argv, "s:p:o:n:k:c:u:r:x:w:W:hvV6")) != -1) {
         switch (cval) {
             case 'V' : verb = 1;                     break;
+            case '6' : ipv6 = 1;                     break;
             case 's' : host = optarg;                break;
             case 'w' : gutl = atoi(optarg);          break;
             case 'W' : cmax = atoi(optarg);          break;
