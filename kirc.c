@@ -66,8 +66,7 @@ static void
 irc_init() {
 
     struct addrinfo *res, hints = {
-//        .ai_family = AF_UNSPEC,
-        .ai_family = AF_INET,
+        .ai_family = AF_UNSPEC,
         .ai_socktype = SOCK_STREAM
     };
 
