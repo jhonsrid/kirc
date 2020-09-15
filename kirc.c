@@ -55,7 +55,7 @@ raw(char *fmt, ...) {
     if (verb) printf("<< %s", cmd_str);
     if (olog) log_append(cmd_str, olog);
     if (write(conn, cmd_str, strlen(cmd_str)) < 0) {
-        perror("Write to socket");
+        perror("Socket");
         exit(EXIT_FAILURE);
     }
 
@@ -66,14 +66,19 @@ static void
 irc_init() {
 
     struct addrinfo *res, hints = {
-        .ai_family = (ipv6 ? AF_INET6 : AF_UNSPEC),
+//        .ai_family = AF_UNSPEC,
+        .ai_family = AF_INET,
         .ai_socktype = SOCK_STREAM
     };
 
     getaddrinfo(host, port, &hints, &res);
     conn = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+    if (ipv6) {
+        int optval = 1;
+        setsockopt(conn, IPPROTO_IPV6, IPV6_V6ONLY, &optval, sizeof(int));
+    }
     if (connect(conn, res->ai_addr, res->ai_addrlen) != 0) {
-        perror("Socket");
+        perror("Connect");
         exit(EXIT_FAILURE);
     }
     freeaddrinfo(res);
