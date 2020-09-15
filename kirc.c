@@ -19,10 +19,10 @@
 [-W columns] [-o path] [-h|v|V|6]"
 
 static int    conn;                      /* connection socket */
-static size_t verb = 0;                  /* verbose output (e.g. raw stream) */
+static int    ipv6 = 0;                  /* force ipv6 */
+static int    verb = 0;                  /* verbose output (e.g. raw stream) */
 static size_t cmax = 80;                 /* max number of chars per line */
 static size_t gutl = 10;                 /* max char width of left column */
-static size_t ipv6 = 0;                  /* force ipv6 */
 static char * host = "irc.freenode.org"; /* irc host address */
 static char * chan = "kirc";             /* channel */
 static char * port = "6667";             /* server port */
